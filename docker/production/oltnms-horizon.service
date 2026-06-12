@@ -1,0 +1,22 @@
+[Unit]
+Description=OLT NMS — Laravel Horizon (Queue Worker)
+After=redis-server.service postgresql.service
+Requires=redis-server.service
+
+[Service]
+User=oltnms
+Group=oltnms
+WorkingDirectory=/var/www/oltnms
+ExecStart=/usr/bin/php artisan horizon
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/oltnms/storage /var/www/oltnms/bootstrap/cache
+
+[Install]
+WantedBy=multi-user.target

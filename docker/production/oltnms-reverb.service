@@ -1,0 +1,21 @@
+[Unit]
+Description=OLT NMS — Laravel Reverb (WebSocket Server)
+After=redis-server.service
+Requires=redis-server.service
+
+[Service]
+User=oltnms
+Group=oltnms
+WorkingDirectory=/var/www/oltnms
+ExecStart=/usr/bin/php artisan reverb:start --host=0.0.0.0 --port=8080
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/oltnms/storage /var/www/oltnms/bootstrap/cache
+
+[Install]
+WantedBy=multi-user.target

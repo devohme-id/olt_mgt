@@ -1,0 +1,50 @@
+###############################################################################
+# OLT NMS — Development Environment
+# Usage:
+#   docker compose up -d          → Start all services
+#   docker compose down           → Stop all services
+#   docker compose logs -f db     → Watch PostgreSQL logs
+###############################################################################
+
+services:
+  # ── PostgreSQL + TimescaleDB ──
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: oltnms_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: olt_nms
+      POSTGRES_USER: oltnms
+      POSTGRES_PASSWORD: oltnms_secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U oltnms -d olt_nms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis (Cache + Queue + Session + Reverb) ──
+  redis:
+    image: redis:7-alpine
+    container_name: oltnms_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
