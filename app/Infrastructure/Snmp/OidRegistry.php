@@ -18,8 +18,7 @@ class OidRegistry
         $cacheKey = "oid_map:{$olt->vendor_id}:{$olt->device_model_id}:{$metricKey}";
         $ttl = config('snmp.cache.oid_map_ttl', 3600);
 
-        return Cache::store(config('snmp.cache.driver', 'redis'))
-            ->remember($cacheKey, $ttl, function () use ($olt, $metricKey) {
+        return Cache::remember($cacheKey, $ttl, function () use ($olt, $metricKey) {
                 // 1. Firmware-specific mapping (most specific)
                 if ($olt->firmware_profile_id) {
                     $mapping = VendorOidMapping::where('vendor_id', $olt->vendor_id)
@@ -58,8 +57,7 @@ class OidRegistry
         $cacheKey = "oid_map_all:{$olt->vendor_id}:{$olt->device_model_id}";
         $ttl = config('snmp.cache.oid_map_ttl', 3600);
 
-        return Cache::store(config('snmp.cache.driver', 'redis'))
-            ->remember($cacheKey, $ttl, function () use ($olt) {
+        return Cache::remember($cacheKey, $ttl, function () use ($olt) {
                 $mappings = VendorOidMapping::where('vendor_id', $olt->vendor_id)
                     ->where(function ($q) use ($olt) {
                         $q->where('device_model_id', $olt->device_model_id)
@@ -89,8 +87,7 @@ class OidRegistry
     {
         if ($vendorId) {
             // Flush specific vendor cache
-            Cache::store(config('snmp.cache.driver', 'redis'))
-                ->forget("oid_map_all:{$vendorId}:*");
+            Cache::forget("oid_map_all:{$vendorId}:*");
         }
         // For a complete flush, use Redis KEYS pattern or tagged cache
     }

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-1.5">
-      <span class="text-sm text-slate-400">{{ label }}</span>
+      <span class="text-sm text-slate-500 dark:text-slate-400">{{ label }}</span>
       <span class="text-sm font-medium" :class="valueColor">{{ displayValue }}{{ unit }}</span>
     </div>
     <div class="h-2 bg-slate-700 rounded-full overflow-hidden">

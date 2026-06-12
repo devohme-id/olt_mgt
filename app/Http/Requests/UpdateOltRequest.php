@@ -18,7 +18,7 @@ class UpdateOltRequest extends FormRequest
 
         return [
             'name'              => ['sometimes', 'string', 'max:100'],
-            'ip_address'        => ['sometimes', 'ip', Rule::unique('olts', 'ip_address')->ignore($oltId)],
+            'ip_address'        => ['sometimes', 'ip', Rule::unique('olts', 'ip_address')->ignore($oltId)->whereNull('deleted_at')],
             'hostname'          => ['nullable', 'string', 'max:255'],
             'vendor_id'         => ['sometimes', 'exists:vendors,id'],
             'device_model_id'   => ['sometimes', 'exists:device_models,id'],

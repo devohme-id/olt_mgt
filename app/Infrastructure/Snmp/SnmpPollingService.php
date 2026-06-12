@@ -26,7 +26,7 @@ class SnmpPollingService
         $metrics = [];
 
         try {
-            $healthOids = ['cpu_usage', 'memory_total', 'memory_used', 'temperature', 'uptime'];
+            $healthOids = ['cpu_usage', 'memory_usage', 'memory_total', 'memory_used', 'temperature', 'uptime'];
             $oidList = [];
 
             foreach ($healthOids as $key) {
@@ -37,10 +37,10 @@ class SnmpPollingService
             }
 
             // Batch GET for all health OIDs
-            $oids = array_map(fn($m) => Oid::fromString($m->oid), $oidList);
+            $oids = array_map(fn($m) => $m->oid, $oidList);
 
             if (!empty($oids)) {
-                $response = $client->get(...$oids);
+                $response = $client->get(...array_values($oids));
 
                 foreach ($response->toArray() as $i => $oidResponse) {
                     $keys = array_keys($oidList);
@@ -90,8 +90,7 @@ class SnmpPollingService
                 return [];
             }
 
-            // SNMP Walk the ONU table
-            $results = $this->snmpWalk($client, $onuTableMapping->oid);
+            // (Removed unused full table walk)
 
             // Also get optical power data
             $rxPowerMapping = $this->oidRegistry->resolve($olt, 'onu_rx_power');
@@ -99,32 +98,55 @@ class SnmpPollingService
             $statusMapping = $this->oidRegistry->resolve($olt, 'onu_status');
             $macMapping = $this->oidRegistry->resolve($olt, 'onu_mac');
             $distanceMapping = $this->oidRegistry->resolve($olt, 'onu_distance');
+            $nameMapping = $this->oidRegistry->resolve($olt, 'onu_name');
+            $deviceTypeMapping = $this->oidRegistry->resolve($olt, 'onu_device_type');
+            $onuTypeMapping = $this->oidRegistry->resolve($olt, 'onu_type');
 
             $rxPowers = $rxPowerMapping ? $this->snmpWalk($client, $rxPowerMapping->oid) : [];
             $txPowers = $txPowerMapping ? $this->snmpWalk($client, $txPowerMapping->oid) : [];
             $statuses = $statusMapping ? $this->snmpWalk($client, $statusMapping->oid) : [];
             $macs = $macMapping ? $this->snmpWalk($client, $macMapping->oid) : [];
             $distances = $distanceMapping ? $this->snmpWalk($client, $distanceMapping->oid) : [];
+            $names = $nameMapping ? $this->snmpWalk($client, $nameMapping->oid) : [];
+            $deviceTypes = $deviceTypeMapping ? $this->snmpWalk($client, $deviceTypeMapping->oid) : [];
+            $onuTypes = $onuTypeMapping ? $this->snmpWalk($client, $onuTypeMapping->oid) : [];
 
             // Parse and correlate by ONU index
             foreach ($statuses as $oid => $value) {
                 $index = $this->extractOnuIndex($oid, $statusMapping->oid);
                 if ($index === null) continue;
 
+                $rxOid = $this->findMatchingOidKey($rxPowers, $rxPowerMapping?->oid, $index);
+                $txOid = $this->findMatchingOidKey($txPowers, $txPowerMapping?->oid, $index);
+                $macOid = $this->findMatchingOidKey($macs, $macMapping?->oid, $index);
+                $distOid = $this->findMatchingOidKey($distances, $distanceMapping?->oid, $index);
+                $nameOid = $this->findMatchingOidKey($names, $nameMapping?->oid, $index);
+                $deviceTypeOid = $this->findMatchingOidKey($deviceTypes, $deviceTypeMapping?->oid, $index);
+                $onuTypeOid = $this->findMatchingOidKey($onuTypes, $onuTypeMapping?->oid, $index);
+
                 $onus[$index] = [
                     'onu_index'     => $index,
                     'status'        => $this->oidParser->parseOnuStatus($value),
-                    'mac_address'   => isset($macs[$this->rebuildOid($macMapping->oid, $index)])
-                        ? $this->oidParser->parseMacAddress($macs[$this->rebuildOid($macMapping->oid, $index)])
+                    'mac_address'   => $macOid !== null
+                        ? $this->oidParser->parseMacAddress($macs[$macOid])
                         : null,
-                    'rx_power_dbm'  => isset($rxPowers[$this->rebuildOid($rxPowerMapping->oid, $index)])
-                        ? $this->oidParser->parseOpticalPower($rxPowers[$this->rebuildOid($rxPowerMapping->oid, $index)])
+                    'name'          => $nameOid !== null
+                        ? $this->oidParser->parse($names[$nameOid], 'string')
                         : null,
-                    'tx_power_dbm'  => isset($txPowers[$this->rebuildOid($txPowerMapping->oid, $index)])
-                        ? $this->oidParser->parseOpticalPower($txPowers[$this->rebuildOid($txPowerMapping->oid, $index)])
+                    'device_type'   => $deviceTypeOid !== null
+                        ? $this->oidParser->parse($deviceTypes[$deviceTypeOid], 'string')
                         : null,
-                    'distance_meters' => isset($distances[$this->rebuildOid($distanceMapping->oid, $index)])
-                        ? (int) $distances[$this->rebuildOid($distanceMapping->oid, $index)]
+                    'onu_type'      => $onuTypeOid !== null
+                        ? $this->oidParser->parse($onuTypes[$onuTypeOid], 'string')
+                        : null,
+                    'rx_power_dbm'  => $rxOid !== null
+                        ? $this->oidParser->parseOpticalPower($rxPowers[$rxOid], $rxPowerMapping?->multiplier ?? 1)
+                        : null,
+                    'tx_power_dbm'  => $txOid !== null
+                        ? $this->oidParser->parseOpticalPower($txPowers[$txOid], $txPowerMapping?->multiplier ?? 1)
+                        : null,
+                    'distance_meters' => $distOid !== null
+                        ? $this->oidParser->parse($distances[$distOid], 'integer')
                         : null,
                 ];
             }
@@ -168,7 +190,7 @@ class SnmpPollingService
     {
         $client = $this->clientFactory->create($olt);
         try {
-            $response = $client->get(Oid::fromString($oid));
+            $response = $client->get($oid);
             return $response->toArray()[0]->getValue();
         } finally {
             try { $client->close(); } catch (\Exception $e) {}
@@ -183,6 +205,29 @@ class SnmpPollingService
         if (str_starts_with($fullOid, $baseOid . '.')) {
             return substr($fullOid, strlen($baseOid) + 1);
         }
+        return null;
+    }
+
+    /**
+     * Find a matching OID key in an array of walked OIDs that starts with the base OID and index.
+     * Some vendors append extra indices like .0.0 to related tables.
+     */
+    private function findMatchingOidKey(array $walkedData, ?string $baseOid, string $index): ?string
+    {
+        if (!$baseOid) return null;
+        
+        $expectedPrefix = $baseOid . '.' . $index;
+        
+        if (isset($walkedData[$expectedPrefix])) {
+            return $expectedPrefix;
+        }
+
+        foreach (array_keys($walkedData) as $oid) {
+            if (str_starts_with($oid, $expectedPrefix . '.')) {
+                return $oid;
+            }
+        }
+
         return null;
     }
 

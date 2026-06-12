@@ -24,7 +24,7 @@ class OidParser
             'float', 'decimal'              => round((float) $value * $multiplier, 4),
             'string', 'octet_string'        => trim((string) $value),
             'mac'                           => $this->parseMacAddress($value),
-            'optical_power'                 => $this->parseOpticalPower($value),
+            'optical_power'                 => $this->parseOpticalPower($value, $multiplier),
             'timeticks'                     => $this->parseTimeTicks($value),
             'ip_address'                    => (string) $value,
             'boolean'                       => (bool) $value,
@@ -64,7 +64,7 @@ class OidParser
     /**
      * Parse optical power value (typically in 0.01 dBm units from SNMP).
      */
-    public function parseOpticalPower(mixed $rawValue): ?float
+    public function parseOpticalPower(mixed $rawValue, float $multiplier = 1.0): ?float
     {
         $value = $this->extractValue($rawValue);
 
@@ -73,6 +73,10 @@ class OidParser
         }
 
         $intValue = (int) $value;
+
+        if ($multiplier !== 1.0) {
+            return round((float) $intValue * $multiplier, 2);
+        }
 
         // Many vendors report in 0.01 dBm or 0.001 dBm units
         // HSGQ typically reports in 0.01 dBm (value / 100)

@@ -54,11 +54,11 @@ class VendorSeeder extends Seeder
                 'speed_limit'        => true,
             ],
             'cli_command_set' => [
-                'register_onu'   => 'epon bind-onu mac {mac} sequence {seq}',
-                'delete_onu'     => 'no epon bind-onu sequence {seq}',
-                'reboot_onu'     => 'epon reset-onu {onu_index}',
-                'set_vlan'       => 'epon onu port vlan {onu_index} {vlan_id}',
-                'set_speed'      => 'epon onu bandwidth {onu_index} upstream {up} downstream {down}',
+                'register_onu'   => "config\r\ninterface epon {pon_port}\r\nbind-onu mac {mac} sequence {seq}",
+                'delete_onu'     => "config\r\ninterface epon {pon_port}\r\nno bind-onu sequence {seq}",
+                'reboot_onu'     => "config\r\ninterface onu {pon_port}/{onu_id}\r\nreboot",
+                'set_vlan'       => "config\r\ninterface onu {pon_port}/{onu_id}\r\nport-vlan 1 mode tag {vlan_id} pri 0",
+                'set_speed'      => "config\r\ninterface onu {pon_port}/{onu_id}\r\nport-rate-limit 1 egress cir {down} pir {down}",
                 'show_onu_info'  => 'show epon onu-info {pon_port}',
                 'show_optical'   => 'show epon optical-info {pon_port}',
                 'show_running'   => 'show running-config',
@@ -71,10 +71,9 @@ class VendorSeeder extends Seeder
         // ── HSGQ OID Mappings ──
         $oidMappings = [
             // System Health
-            ['metric_key' => 'cpu_usage',     'oid' => '1.3.6.1.4.1.3320.9.109.1.1.1.1.8',  'data_type' => 'integer', 'unit' => '%'],
-            ['metric_key' => 'memory_total',  'oid' => '1.3.6.1.4.1.3320.9.48.1.1.5',        'data_type' => 'integer', 'unit' => 'bytes'],
-            ['metric_key' => 'memory_used',   'oid' => '1.3.6.1.4.1.3320.9.48.1.1.6',        'data_type' => 'integer', 'unit' => 'bytes'],
-            ['metric_key' => 'temperature',   'oid' => '1.3.6.1.4.1.3320.9.146.1.2.1.7',     'data_type' => 'integer', 'unit' => '°C'],
+            ['metric_key' => 'cpu_usage',     'oid' => '1.3.6.1.4.1.50224.3.1.1.8.0',       'data_type' => 'integer', 'unit' => '%'],
+            ['metric_key' => 'memory_usage',  'oid' => '1.3.6.1.4.1.50224.3.1.1.17.0',      'data_type' => 'integer', 'unit' => '%'],
+            ['metric_key' => 'temperature',   'oid' => '1.3.6.1.4.1.50224.3.1.1.18.0',      'data_type' => 'integer', 'unit' => '°C'],
             ['metric_key' => 'uptime',        'oid' => '1.3.6.1.2.1.1.3.0',                   'data_type' => 'timeticks', 'unit' => 'seconds'],
 
             // ONU Management

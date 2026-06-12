@@ -111,7 +111,11 @@ class HsgqAdapter extends AbstractDeviceAdapter
                 return $this->result(false, 'No CLI command template for delete_onu');
             }
 
-            $command = $this->buildCliCommand($template, ['seq' => $onuIndex]);
+            $onuParams = $this->getOnuParams($onuIndex);
+            $command = $this->buildCliCommand($template, array_merge(
+                ['seq' => $onuParams['onu_id']], // keep seq for backward compatibility
+                $onuParams
+            ));
             $output = $this->cliExecute($command);
 
             return $this->result(true, 'ONU deleted', ['output' => $output]);
@@ -130,7 +134,8 @@ class HsgqAdapter extends AbstractDeviceAdapter
                 return $this->result(false, 'No CLI command template for reboot_onu');
             }
 
-            $command = $this->buildCliCommand($template, ['onu_index' => $onuIndex]);
+            $onuParams = $this->getOnuParams($onuIndex);
+            $command = $this->buildCliCommand($template, $onuParams);
             $output = $this->cliExecute($command);
 
             return $this->result(true, 'ONU rebooted', ['output' => $output]);
@@ -159,8 +164,9 @@ class HsgqAdapter extends AbstractDeviceAdapter
                 return $this->result(false, 'No CLI command template for set_vlan');
             }
 
+            $onuParams = $this->getOnuParams($onuIndex);
             $command = $this->buildCliCommand($template, array_merge(
-                ['onu_index' => $onuIndex],
+                $onuParams,
                 $config
             ));
             $output = $this->cliExecute($command);
@@ -181,8 +187,9 @@ class HsgqAdapter extends AbstractDeviceAdapter
                 return $this->result(false, 'No CLI command template for set_speed');
             }
 
+            $onuParams = $this->getOnuParams($onuIndex);
             $command = $this->buildCliCommand($template, array_merge(
-                ['onu_index' => $onuIndex],
+                $onuParams,
                 $profile
             ));
             $output = $this->cliExecute($command);
@@ -191,6 +198,28 @@ class HsgqAdapter extends AbstractDeviceAdapter
         } catch (\Exception $e) {
             return $this->result(false, $e->getMessage());
         }
+    }
+
+    /**
+     * Helper to decode onu_index and fetch onu MAC address from database.
+     */
+    private function getOnuParams(string $onuIndex): array
+    {
+        $indexInt = (int)$onuIndex;
+        $ponPort = ($indexInt >> 8) & 0xFF;
+        $onuId = $indexInt & 0xFF;
+
+        $onu = \App\Domain\Device\Models\Onu::where('olt_id', $this->olt->id)
+            ->where('onu_index', $onuIndex)
+            ->first();
+        $mac = $onu?->mac_address;
+
+        return [
+            'onu_index' => $onuIndex,
+            'pon_port'  => $ponPort,
+            'onu_id'    => $onuId,
+            'mac'       => $mac,
+        ];
     }
 
     public function getRunningConfig(): string

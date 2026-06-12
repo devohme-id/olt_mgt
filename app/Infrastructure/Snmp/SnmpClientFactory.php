@@ -18,6 +18,7 @@ class SnmpClientFactory
             'timeout' => config('snmp.default_timeout', 5),
             'retries' => config('snmp.default_retries', 3),
             'version' => $this->resolveVersion($olt->snmp_version),
+            'use_bulk' => true,
         ];
 
         if ($olt->snmp_version === 'v3') {
@@ -60,6 +61,7 @@ class SnmpClientFactory
             'timeout' => config('snmp.default_timeout', 5),
             'retries' => config('snmp.default_retries', 3),
             'version' => $this->resolveVersion($olt->snmp_version),
+            'use_bulk' => true,
         ];
     }
 

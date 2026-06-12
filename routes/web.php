@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\OltController;
 use App\Http\Controllers\Web\OnuController;
 use App\Http\Controllers\Web\AlarmController;
+use App\Http\Controllers\Web\AuditController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\OidExplorerController;
 use Illuminate\Support\Facades\Route;
@@ -70,4 +71,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/explorer', [OidExplorerController::class, 'index'])->name('explorer');
         Route::post('/explorer', [OidExplorerController::class, 'explore'])->name('explorer.explore');
     });
+
+    // ── Audit ──
+    Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
 });

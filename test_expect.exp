@@ -1,0 +1,13 @@
+#!/usr/bin/expect -f
+set timeout 5
+spawn telnet 103.122.64.161
+expect "username:"
+send "root\r"
+expect "password:"
+send "admin\r"
+expect ">" { send "enable\r"; expect "#" } "#" { }
+send "epon reset-onu ?\r"
+expect "#"
+send "epon ?\r"
+expect "#"
+send "exit\r"

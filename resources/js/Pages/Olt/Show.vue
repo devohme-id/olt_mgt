@@ -4,10 +4,10 @@
       <!-- Header -->
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <a href="/olt" class="text-slate-500 hover:text-white transition"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></a>
+          <a href="/olt" class="text-slate-500 hover:text-slate-900 dark:text-white transition"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></a>
           <div>
-            <h1 class="text-2xl font-bold text-white">{{ olt.name }}</h1>
-            <p class="text-slate-400 text-sm font-mono">{{ olt.ip_address }}</p>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ olt.name }}</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-mono">{{ olt.ip_address }}</p>
           </div>
           <span class="ml-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium" :class="statusClass">
             <span class="w-1.5 h-1.5 rounded-full" :class="statusDot"></span>
@@ -44,50 +44,50 @@
 
       <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <!-- Device Info -->
-        <div class="bg-[#1E293B] rounded-xl border border-slate-700/50 p-5">
-          <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">Device Information</h2>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 p-5">
+          <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-4">Device Information</h2>
           <dl class="space-y-3 text-sm">
-            <div class="flex justify-between"><dt class="text-slate-500">Vendor</dt><dd class="text-white">{{ olt.vendor?.name || '-' }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">Model</dt><dd class="text-white">{{ olt.device_model?.model_number || '-' }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">Firmware</dt><dd class="text-white text-xs">{{ olt.firmware_profile?.version || '-' }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">Site</dt><dd class="text-white">{{ olt.site?.name || '-' }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">SNMP</dt><dd class="text-white">{{ olt.snmp_version }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">CLI</dt><dd class="text-white">{{ olt.cli_protocol || 'N/A' }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">Last Polled</dt><dd class="text-slate-300 text-xs">{{ formatDate(olt.last_polled_at) }}</dd></div>
-            <div class="flex justify-between"><dt class="text-slate-500">Last Seen</dt><dd class="text-slate-300 text-xs">{{ formatDate(olt.last_seen_at) }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Vendor</dt><dd class="text-slate-900 dark:text-white">{{ olt.vendor?.name || '-' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Model</dt><dd class="text-slate-900 dark:text-white">{{ olt.device_model?.model_number || '-' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Firmware</dt><dd class="text-slate-900 dark:text-white text-xs">{{ olt.firmware_profile?.version || '-' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Site</dt><dd class="text-slate-900 dark:text-white">{{ olt.site?.name || '-' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">SNMP</dt><dd class="text-slate-900 dark:text-white">{{ olt.snmp_version }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">CLI</dt><dd class="text-slate-900 dark:text-white">{{ olt.cli_protocol || 'N/A' }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Last Polled</dt><dd class="text-slate-700 dark:text-slate-300 text-xs">{{ formatDate(olt.last_polled_at) }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Last Seen</dt><dd class="text-slate-700 dark:text-slate-300 text-xs">{{ formatDate(olt.last_seen_at) }}</dd></div>
           </dl>
         </div>
 
         <!-- System Health -->
-        <div class="bg-[#1E293B] rounded-xl border border-slate-700/50 p-5">
-          <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">System Health</h2>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 p-5">
+          <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-4">System Health</h2>
           <div class="space-y-4">
             <MetricBar label="CPU Usage" :value="systemInfo.cpu_usage" unit="%" :warn="80" :crit="95" />
             <MetricBar label="Memory Usage" :value="systemInfo.memory_usage" unit="%" :warn="80" :crit="95" />
             <MetricBar label="Temperature" :value="systemInfo.temperature" unit="°C" :warn="60" :crit="75" :max="100" />
             <div class="flex justify-between text-sm">
               <span class="text-slate-500">Uptime</span>
-              <span class="text-white">{{ formatUptime(systemInfo.uptime) }}</span>
+              <span class="text-slate-900 dark:text-white">{{ formatUptime(systemInfo.uptime) }}</span>
             </div>
           </div>
         </div>
 
         <!-- PON Ports -->
-        <div class="bg-[#1E293B] rounded-xl border border-slate-700/50">
-          <div class="p-4 border-b border-slate-700/50">
-            <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">PON Ports</h2>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50">
+          <div class="p-4 border-b border-slate-200 dark:border-slate-700/50">
+            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">PON Ports</h2>
           </div>
           <div class="divide-y divide-slate-700/30">
-            <div v-for="port in olt.pon_ports" :key="port.id" class="px-4 py-3 flex items-center justify-between hover:bg-slate-800/30 transition">
+            <div v-for="port in olt.pon_ports" :key="port.id" class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-50 dark:bg-slate-800/30 transition">
               <div>
-                <p class="text-sm font-medium text-white">{{ port.port_name }}</p>
+                <p class="text-sm font-medium text-slate-900 dark:text-white">{{ port.port_name }}</p>
                 <p class="text-xs text-slate-500">Index: {{ port.port_index }}</p>
               </div>
               <div class="text-right">
                 <p class="text-sm">
                   <span class="text-green-400">{{ port.online_onus_count || 0 }}</span>
                   <span class="text-slate-600"> / </span>
-                  <span class="text-slate-300">{{ port.onus_count || 0 }}</span>
+                  <span class="text-slate-700 dark:text-slate-300">{{ port.onus_count || 0 }}</span>
                 </p>
                 <p class="text-[10px] text-slate-500">ONUs</p>
               </div>
@@ -117,7 +117,7 @@ const statusClass = computed(() => ({
   online: 'bg-green-500/10 text-green-400',
   offline: 'bg-red-500/10 text-red-400',
   maintenance: 'bg-amber-500/10 text-amber-400',
-}[props.olt.status] || 'bg-slate-500/10 text-slate-400'));
+}[props.olt.status] || 'bg-slate-500/10 text-slate-500 dark:text-slate-400'));
 
 const statusDot = computed(() => ({
   online: 'bg-green-400', offline: 'bg-red-400', maintenance: 'bg-amber-400',

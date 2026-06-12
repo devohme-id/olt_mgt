@@ -66,11 +66,24 @@ class PollOnuJob implements ShouldQueue
                 'onu_index'      => $index,
                 'status'         => $data['status'] ?? 'unknown',
                 'mac_address'    => $data['mac_address'] ?? $onu?->mac_address,
+                'name'           => $data['name'] ?? $onu?->name,
+                'device_type'    => $data['device_type'] ?? $onu?->device_type,
+                'onu_type'       => $data['onu_type'] ?? $onu?->onu_type,
                 'rx_power_dbm'   => $data['rx_power_dbm'],
                 'tx_power_dbm'   => $data['tx_power_dbm'],
                 'distance_meters' => $data['distance_meters'],
                 'last_seen_at'   => $now,
             ];
+
+            // Local tracking for deregistration
+            $currentStatus = $data['status'] ?? 'unknown';
+            if ($previousStatus === 'online' && in_array($currentStatus, ['offline', 'los'])) {
+                $onuAttributes['deregistered_at'] = $now;
+                $onuAttributes['deregister_reason'] = 'Local Status Change';
+            } elseif ($currentStatus === 'online') {
+                $onuAttributes['deregistered_at'] = null;
+                $onuAttributes['deregister_reason'] = null;
+            }
 
             if ($onu) {
                 $onu->update($onuAttributes);
@@ -130,12 +143,17 @@ class PollOnuJob implements ShouldQueue
      */
     private function resolvePonPort(Olt $olt, string $onuIndex): ?PonPort
     {
-        $parts = explode('.', $onuIndex);
-
-        if (count($parts) >= 2) {
-            $portIndex = (int) $parts[1]; // Second part is the PON port number
+        // Handle V-SOL / HSGQ style large integer index (e.g., 16777473)
+        if (is_numeric($onuIndex) && strpos($onuIndex, '.') === false) {
+            $devicePortId = ((int) $onuIndex >> 8) & 0xFF;
+            $portIndex = max(0, $devicePortId - 1); // Device is 1-indexed, DB is 0-indexed
         } else {
-            $portIndex = 0;
+            $parts = explode('.', $onuIndex);
+            if (count($parts) >= 2) {
+                $portIndex = (int) $parts[1]; // Second part is the PON port number
+            } else {
+                $portIndex = 0;
+            }
         }
 
         return $olt->ponPorts->firstWhere('port_index', $portIndex)

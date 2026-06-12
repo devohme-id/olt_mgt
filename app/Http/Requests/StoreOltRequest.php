@@ -16,7 +16,7 @@ class StoreOltRequest extends FormRequest
     {
         return [
             'name'              => ['required', 'string', 'max:100'],
-            'ip_address'        => ['required', 'ip', Rule::unique('olts', 'ip_address')],
+            'ip_address'        => ['required', 'ip', Rule::unique('olts', 'ip_address')->whereNull('deleted_at')],
             'hostname'          => ['nullable', 'string', 'max:255'],
             'vendor_id'         => ['required', 'exists:vendors,id'],
             'device_model_id'   => ['required', 'exists:device_models,id'],

@@ -1,17 +1,17 @@
 <template>
-  <div class="flex h-screen overflow-hidden bg-[#0F172A]">
+  <div class="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
     <!-- Sidebar -->
-    <aside class="w-64 bg-[#1E293B] border-r border-slate-700/50 flex flex-col flex-shrink-0">
+    <aside class="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/50 flex flex-col flex-shrink-0">
       <!-- Logo -->
-      <div class="h-16 flex items-center px-5 border-b border-slate-700/50">
+      <div class="h-16 flex items-center px-5 border-b border-slate-200 dark:border-slate-700/50">
         <a href="/" class="flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg class="w-4 h-4 text-slate-900 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9.348 14.652a3.75 3.75 0 010-5.304m5.304 0a3.75 3.75 0 010 5.304m-7.425 2.121a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.788m13.788 0c3.808 3.808 3.808 9.98 0 13.788" />
             </svg>
           </div>
           <div>
-            <span class="text-sm font-bold text-white tracking-wide">OLT NMS</span>
+            <span class="text-sm font-bold text-slate-900 dark:text-white tracking-wide">OLT NMS</span>
             <span class="block text-[10px] text-slate-500">v1.0.0</span>
           </div>
         </a>
@@ -64,16 +64,24 @@
       </nav>
 
       <!-- User -->
-      <div class="p-3 border-t border-slate-700/50">
+      <div class="p-3 border-t border-slate-200 dark:border-slate-700/50">
         <div class="flex items-center gap-3 px-3 py-2">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-slate-900 dark:text-white">
             {{ userInitials }}
           </div>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-white truncate">{{ $page.props.auth.user?.name }}</p>
+            <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ $page.props.auth.user?.name }}</p>
             <p class="text-xs text-slate-500 truncate">{{ $page.props.auth.user?.role_name }}</p>
           </div>
-          <form @submit.prevent="logout">
+          
+          <!-- Theme Toggle -->
+          <button @click="toggleTheme" type="button" class="text-slate-500 hover:text-amber-500 dark:hover:text-blue-400 transition" :title="isDarkMode ? 'Light Mode' : 'Dark Mode'">
+            <svg v-if="isDarkMode" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+          </button>
+
+          <!-- Logout -->
+          <form @submit.prevent="logout" class="flex">
             <button type="submit" class="text-slate-500 hover:text-red-400 transition" title="Logout">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
             </button>
@@ -91,13 +99,30 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import FlashMessage from '@/Components/FlashMessage.vue';
 import NavItem from '@/Components/NavItem.vue';
 
 const page = usePage();
 const alarmCount = computed(() => null); // Will be populated from shared data later
+
+const isDarkMode = ref(false);
+
+onMounted(() => {
+  isDarkMode.value = document.documentElement.classList.contains('dark');
+});
+
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value;
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }
+};
 
 const userInitials = computed(() => {
   const name = page.props.auth.user?.name || '';

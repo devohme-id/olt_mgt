@@ -30,6 +30,7 @@ class OnuController extends Controller
             'onus'    => $onus,
             'filters' => $request->only(['olt_id', 'pon_port_id', 'status', 'auth_status', 'search']),
             'olts'    => Olt::get(['id', 'name', 'ip_address']),
+            'pon_ports'=> \App\Domain\Device\Models\PonPort::get(['id', 'port_name', 'olt_id']),
             'profiles' => ServiceProfile::where('is_active', true)->get(['id', 'name']),
         ]);
     }
@@ -66,7 +67,7 @@ class OnuController extends Controller
     {
         $result = $this->onuService->reboot($onu, auth()->id());
         $status = ($result['success'] ?? false) ? 'success' : 'error';
-        $msg = ($result['success'] ?? false) ? 'ONU reboot command sent.' : 'Reboot failed: ' . ($result['error'] ?? 'Unknown');
+        $msg = ($result['success'] ?? false) ? 'ONU reboot command sent.' : 'Reboot failed: ' . ($result['message'] ?? 'Unknown');
 
         return back()->with($status, $msg);
     }

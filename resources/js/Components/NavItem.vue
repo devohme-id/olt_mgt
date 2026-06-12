@@ -2,7 +2,7 @@
   <a
     :href="href"
     class="flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-all duration-150"
-    :class="active ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'"
+    :class="active ? 'bg-blue-500/10 text-blue-400 font-medium' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700/50'"
   >
     <span class="flex-shrink-0"><slot name="icon" /></span>
     <span>{{ label }}</span>

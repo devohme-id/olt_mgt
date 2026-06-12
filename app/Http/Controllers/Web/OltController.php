@@ -55,7 +55,16 @@ class OltController extends Controller
      */
     public function store(StoreOltRequest $request)
     {
-        $olt = $this->oltService->create($request->validated(), auth()->id());
+        $data = $request->validated();
+        
+        // Map form fields to database columns
+        if (isset($data['snmp_community'])) {
+            $data['snmp_community_read'] = $data['snmp_community'];
+            $data['snmp_community_write'] = $data['snmp_community'];
+            unset($data['snmp_community']);
+        }
+
+        $olt = $this->oltService->create($data, auth()->id());
 
         return redirect()->route('olt.show', $olt)
             ->with('success', "OLT '{$olt->name}' created successfully.");
@@ -93,7 +102,16 @@ class OltController extends Controller
      */
     public function update(UpdateOltRequest $request, Olt $olt)
     {
-        $this->oltService->update($olt, $request->validated(), auth()->id());
+        $data = $request->validated();
+        
+        // Map form fields to database columns
+        if (isset($data['snmp_community'])) {
+            $data['snmp_community_read'] = $data['snmp_community'];
+            $data['snmp_community_write'] = $data['snmp_community'];
+            unset($data['snmp_community']);
+        }
+
+        $this->oltService->update($olt, $data, auth()->id());
 
         return redirect()->route('olt.show', $olt)
             ->with('success', "OLT '{$olt->name}' updated successfully.");

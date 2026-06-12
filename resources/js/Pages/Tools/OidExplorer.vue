@@ -3,30 +3,30 @@
     <div class="p-6 space-y-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-white">SNMP OID Explorer</h1>
-          <p class="text-slate-400 text-sm mt-0.5">Advanced diagnostics and raw SNMP querying</p>
+          <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNMP OID Explorer</h1>
+          <p class="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Advanced diagnostics and raw SNMP querying</p>
         </div>
       </div>
 
-      <div class="bg-[#1E293B] rounded-xl border border-slate-700/50 p-6">
+      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 p-6">
         <form @submit.prevent="runQuery" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div>
-            <label class="block text-sm font-medium text-slate-300 mb-1">Target OLT</label>
-            <select v-model="form.olt_id" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 outline-none" required>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Target OLT</label>
+            <select v-model="form.olt_id" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" required>
               <option :value="null" disabled>Select an OLT</option>
               <option v-for="olt in olts" :key="olt.id" :value="olt.id">{{ olt.name }} ({{ olt.ip_address }})</option>
             </select>
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-slate-300 mb-1">Target OID</label>
-            <input v-model="form.oid" type="text" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono focus:ring-2 focus:ring-blue-500 outline-none" placeholder=".1.3.6.1.2.1.1.1.0" required>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Target OID</label>
+            <input v-model="form.oid" type="text" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-blue-500 outline-none" placeholder=".1.3.6.1.2.1.1.1.0" required>
           </div>
           <div class="flex gap-2">
-            <select v-model="form.method" class="w-24 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+            <select v-model="form.method" class="w-24 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none">
               <option value="get">GET</option>
               <option value="walk">WALK</option>
             </select>
-            <button type="submit" :disabled="loading" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition disabled:opacity-50">
+            <button type="submit" :disabled="loading" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-slate-900 dark:text-white font-medium rounded-lg transition disabled:opacity-50">
               {{ loading ? 'Querying...' : 'Execute' }}
             </button>
           </div>
@@ -38,14 +38,14 @@
         <span class="font-bold">Error:</span> {{ error }}
       </div>
 
-      <div v-if="results" class="bg-[#1E293B] rounded-xl border border-slate-700/50 overflow-hidden">
-        <div class="p-4 border-b border-slate-700/50 flex justify-between items-center bg-slate-800/50">
-          <h2 class="text-white font-medium">Query Results</h2>
-          <span class="text-xs text-slate-400">Time: {{ timeMs }}ms | Count: {{ results.length }}</span>
+      <div v-if="results" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700/50 flex justify-between items-center bg-slate-100 dark:bg-slate-800/50">
+          <h2 class="text-slate-900 dark:text-white font-medium">Query Results</h2>
+          <span class="text-xs text-slate-500 dark:text-slate-400">Time: {{ timeMs }}ms | Count: {{ results.length }}</span>
         </div>
         <div class="overflow-x-auto max-h-[600px]">
           <table class="w-full text-sm text-left">
-            <thead class="text-xs text-slate-400 uppercase bg-slate-800/80 sticky top-0">
+            <thead class="text-xs text-slate-500 dark:text-slate-400 uppercase bg-white dark:bg-slate-800/80 sticky top-0">
               <tr>
                 <th class="px-4 py-3">OID</th>
                 <th class="px-4 py-3 w-32">Type</th>
@@ -53,10 +53,10 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-700/30">
-              <tr v-for="res in results" :key="res.oid" class="hover:bg-slate-800/30 font-mono text-xs">
+              <tr v-for="res in results" :key="res.oid" class="hover:bg-slate-50 dark:hover:bg-slate-50 dark:bg-slate-800/30 font-mono text-xs">
                 <td class="px-4 py-2 text-blue-400 break-all">{{ res.oid }}</td>
                 <td class="px-4 py-2 text-slate-500">{{ res.type }}</td>
-                <td class="px-4 py-2 text-slate-300 break-all">{{ res.value }}</td>
+                <td class="px-4 py-2 text-slate-700 dark:text-slate-300 break-all">{{ res.value }}</td>
               </tr>
               <tr v-if="results.length === 0">
                 <td colspan="3" class="px-4 py-8 text-center text-slate-500">No results found for this OID.</td>

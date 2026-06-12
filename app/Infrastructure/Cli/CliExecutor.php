@@ -62,23 +62,52 @@ class CliExecutor
             throw new \RuntimeException("Telnet connection failed to {$host}:{$port} - {$errstr}");
         }
 
-        stream_set_timeout($socket, $timeout);
+        stream_set_timeout($socket, 2);
 
-        // Wait for login prompt and authenticate
-        $this->telnetWaitFor($socket, 'Username:');
-        fwrite($socket, $olt->telnet_username . "\n");
+        // Wait for login prompt and authenticate (case-insensitive)
+        $this->telnetWaitFor($socket, 'username:');
+        usleep(250000); // Wait 250ms for OLT to be ready
+        fwrite($socket, $olt->telnet_username . "\r\n");
 
-        $this->telnetWaitFor($socket, 'Password:');
-        fwrite($socket, $olt->telnet_password . "\n");
+        $this->telnetWaitFor($socket, 'password:');
+        usleep(250000); // Wait 250ms for OLT to be ready
+        fwrite($socket, $olt->telnet_password . "\r\n");
 
-        // Wait for command prompt
-        $this->telnetWaitFor($socket, '#');
+        // Wait for command prompt (> or #)
+        $prompt = $this->telnetWaitForAny($socket, ['>', '#']);
 
-        // Send command
-        fwrite($socket, $command . "\n");
+        if (!str_contains($prompt, '>') && !str_contains($prompt, '#')) {
+            throw new \RuntimeException("Telnet login failed or prompt not found. Output: " . trim($prompt));
+        }
 
-        // Read response
-        $output = $this->telnetWaitFor($socket, '#');
+        if (str_ends_with(trim($prompt), '>')) {
+            // Negotiate enable mode to get to #
+            fwrite($socket, "enable\r\n");
+            $enablePrompt = $this->telnetWaitForAny($socket, ['#', 'password:']);
+            
+            if (stripos($enablePrompt, 'password:') !== false) {
+                usleep(250000); // Wait 250ms for OLT to be ready
+                fwrite($socket, $olt->telnet_password . "\r\n");
+                $enablePrompt = $this->telnetWaitFor($socket, '#');
+            }
+
+            if (!str_contains($enablePrompt, '#')) {
+                throw new \RuntimeException("Failed to enter privilege enable mode. Output: " . trim($enablePrompt));
+            }
+        }
+
+        // Split multiline commands and run sequentially
+        $lines = preg_split('/\r\n|\r|\n/', $command);
+        $output = '';
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '') continue;
+
+            usleep(100000); // Wait 100ms before sending command
+            fwrite($socket, $line . "\r\n");
+            // Wait for prompt (> or #) after each command
+            $output .= $this->telnetWaitForAny($socket, ['>', '#']);
+        }
 
         fclose($socket);
 
@@ -88,7 +117,7 @@ class CliExecutor
     }
 
     /**
-     * Read from telnet socket until a pattern is found.
+     * Read from telnet socket until a case-insensitive pattern is found.
      */
     private function telnetWaitFor($socket, string $pattern, int $timeout = 10): string
     {
@@ -97,14 +126,56 @@ class CliExecutor
 
         while (time() - $start < $timeout) {
             $char = fgetc($socket);
-            if ($char === false) break;
+            if ($char === false) {
+                $info = stream_get_meta_data($socket);
+                if ($info['timed_out']) {
+                    usleep(10000);
+                    continue;
+                }
+                break;
+            }
             $buffer .= $char;
 
-            if (str_contains($buffer, $pattern)) {
+            if (stripos($buffer, $pattern) !== false) {
+                Log::debug("telnetWaitFor matched '$pattern', buffer: " . $buffer);
                 return $buffer;
             }
         }
+        Log::debug("telnetWaitFor timeout for '$pattern', buffer: " . $buffer);
+
+        return $buffer;
+    }
+
+    /**
+     * Read from telnet socket until any of the patterns are found at the end of the buffer.
+     */
+    private function telnetWaitForAny($socket, array $patterns, int $timeout = 10): string
+    {
+        $buffer = '';
+        $start = time();
+
+        while (time() - $start < $timeout) {
+            $char = fgetc($socket);
+            if ($char === false) {
+                $info = stream_get_meta_data($socket);
+                if ($info['timed_out']) {
+                    usleep(10000);
+                    continue;
+                }
+                break;
+            }
+            $buffer .= $char;
+
+            foreach ($patterns as $pattern) {
+                if (str_ends_with(trim($buffer), $pattern)) {
+                    Log::debug("telnetWaitForAny matched '$pattern', buffer: " . $buffer);
+                    return $buffer;
+                }
+            }
+        }
+        Log::debug("telnetWaitForAny timeout, buffer: " . $buffer);
 
         return $buffer;
     }
 }
+

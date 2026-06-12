@@ -14,11 +14,11 @@ class Onu extends Model
 
     protected $fillable = [
         'olt_id', 'pon_port_id', 'service_profile_id',
-        'onu_index', 'serial_number', 'mac_address', 'vendor_id', 'model',
+        'onu_index', 'name', 'serial_number', 'mac_address', 'vendor_id', 'device_type', 'model', 'onu_type',
         'firmware_version', 'status', 'auth_status', 'description',
         'customer_name', 'customer_id', 'distance_meters',
         'rx_power_dbm', 'tx_power_dbm', 'olt_rx_power_dbm', 'optical_loss_db',
-        'last_seen_at', 'registered_at', 'metadata',
+        'last_seen_at', 'registered_at', 'deregistered_at', 'deregister_reason', 'metadata',
     ];
 
     protected function casts(): array
@@ -32,6 +32,7 @@ class Onu extends Model
             'optical_loss_db' => 'decimal:2',
             'last_seen_at' => 'datetime',
             'registered_at' => 'datetime',
+            'deregistered_at' => 'datetime',
         ];
     }
 
